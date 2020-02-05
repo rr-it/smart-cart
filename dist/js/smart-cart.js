@@ -45,6 +45,11 @@
             cartRemove: '×',
             cartEmpty: 'Cart is Empty'
         },
+        storageSettings: {
+            persistentCart: false, // Make cart persistent. Notice: If the given 'storageApi'-object is broken, the persistent cart is disabled.
+            storageApi: localStorage, // Storage object: localStorage, sessionStorage or custom object implementing Web Storage API.
+            storageKey: 'cart_list'
+        },
         submitSettings: {
             submitType: 'form', // form, paypal, ajax
             ajaxURL: '', // Ajax submit URL
@@ -85,6 +90,11 @@
     $.extend(SmartCart.prototype, {
 
         init: function () {
+            var self = this;
+
+            // Init persistent storage; on failure disable persistence.
+            this._initStorageApi();
+
             // Set the elements
             this._setElements();
 
@@ -94,8 +104,15 @@
             // Assign plugin events
             this._setEvents();
 
+            if (this.options.storageSettings.persistentCart === true) {
+                // Restore cart value from persistent storage
+                var storageCart = JSON.parse(this._storageApi.getItem(this.options.storageSettings.storageKey));
+                $(storageCart).each(function (i, p) {
+                    self._addToCart(p);
+                });
+            }
+
             // Set initial products
-            var self = this;
             $(this.options.cart).each(function (i, p) {
                 p = self._addToCart(p);
             });
@@ -457,6 +474,11 @@
 
             // Update cart value to the  cart hidden element 
             $('#' + this.options.resultName, this.cartElement).val(JSON.stringify(this.cart));
+
+            if (this.options.storageSettings.persistentCart === true) {
+                // Store cart value to persistent storage
+                this._storageApi.setItem(this.options.storageSettings.storageKey, JSON.stringify(this.cart));
+            }
         },
         /* 
          * Calculates the cart subtotal
@@ -529,8 +551,31 @@
             return true;
         },
 
-        // HELPER FUNCTIONS
+        // SERVICES
         /* 
+         * Storage
+         */
+        _storageApi: undefined,
+        _initStorageApi: function () {
+            if (this.options.storageSettings.persistentCart === true) {
+                this._storageApi = this.options.storageSettings.storageApi;
+
+                // @see https://github.com/Modernizr/Modernizr/blob/219b377beecf3473f479a3151eff9de086c41f3e/feature-detects/storage/localstorage.js
+                var mod = 'modernizr';
+                try {
+                    this._storageApi.setItem(mod, mod);
+                    this._storageApi.getItem(mod);
+                    this._storageApi.removeItem(mod);
+                } catch (e) {
+                    this._logMessage('Storage API is broken: persistent cart disabled.');
+                    this._storageApi = undefined;
+                    this.options.storageSettings.persistentCart = false;
+                }
+            }
+        },
+
+        // HELPER FUNCTIONS
+        /*
          * Get the content of an HTML element irrespective of its type
          */
         _getContent: function (elm) {
