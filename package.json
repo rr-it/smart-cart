@@ -20,11 +20,11 @@
     "lint": "gulp lint"
   },
   "dependencies": {
-    "jquery": ">=1.9.0"
+    "jquery": "^3.4.1"
   },
   "devDependencies": {
     "autoprefixer": "^6.7.7",
-    "browser-sync": "^2.11.0",
+    "browser-sync": "^2.26.7",
     "del": "^2.2.2",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
@@ -39,7 +39,7 @@
     "jasmine-core": "^2.5.2",
     "jasmine-jquery": "^2.1.1",
     "jshint": "^2.9.4",
-    "karma": "^1.5.0",
+    "karma": "^1.7.1",
     "karma-chrome-launcher": "^2.0.0",
     "karma-cli": "^1.0.1",
     "karma-jasmine": "^1.1.0",
