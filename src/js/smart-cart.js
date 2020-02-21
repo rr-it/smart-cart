@@ -427,7 +427,9 @@
                 var quantitySelect = $('<select class="sc-cart-item-qty"></select>');
                 var value = this._getValueOrEmpty(p[this.options.paramSettings.productQuantity]);
 
-                for(var i = 1; i <= 100; i++) {
+                var selectMin = (min > 0 ? min : 1);
+                var selectMax = (max < 100 ? max : 100);
+                for(var i = selectMin; i <= selectMax; i++) {
                     var stepValue = step * i;
                     quantitySelect.append('<option value="' + stepValue + '">' + stepValue + '</option>');
                 }
