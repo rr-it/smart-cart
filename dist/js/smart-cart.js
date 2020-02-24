@@ -335,6 +335,8 @@
                 p.unique_key = this._getUniqueKey();
             }
 
+            p[this.options.paramSettings.productQuantity] = this._filterQuantity(p);
+
             if (this.options.combineProducts) {
                 var pf = $.grep(this.cart, function (n, i) {
                     return self._isObjectsEqual(n, p);
@@ -342,6 +344,7 @@
                 if (pf.length > 0) {
                     var idx = this.cart.indexOf(pf[0]);
                     this.cart[idx][this.options.paramSettings.productQuantity] = this.cart[idx][this.options.paramSettings.productQuantity] - 0 + (p[this.options.paramSettings.productQuantity] - 0);
+                    this.cart[idx][this.options.paramSettings.productQuantity] = this._filterQuantity(this.cart[idx]);
                     p = this.cart[idx];
                     // Trigger "itemUpdated" event
                     this._triggerEvent("itemUpdated", [p, this.cart]);
@@ -396,6 +399,7 @@
                 if (n.unique_key === unique_key) {
                     if (qv) {
                         self.cart[i][self.options.paramSettings.productQuantity] = qty;
+                        self.cart[i][self.options.paramSettings.productQuantity] = self._filterQuantity(self.cart[i]);
                     }
                     self._addUpdateCartItem(self.cart[i]);
                     // Trigger "quantityUpdate" event
@@ -417,15 +421,17 @@
                 elmMain = $('<tr></tr>').addClass('sc-cart-item');
                 elmMain.attr('data-unique-key', p.unique_key);
 
-                var min = typeof p[this.options.paramSettings.productQuantityMin] !== "undefined" ? p[this.options.paramSettings.productQuantityMin] : this.options.quantityOptions.min;
-                var max = typeof p[this.options.paramSettings.productQuantityMax] !== "undefined" ? p[this.options.paramSettings.productQuantityMax] : this.options.quantityOptions.max;
+                var min = this._getQuantityMin(p);
+                var max = this._getQuantityMax(p);
                 var step = typeof p[this.options.paramSettings.productQuantityStep] !== "undefined" ? p[this.options.paramSettings.productQuantityStep] : this.options.quantityOptions.step;
                 var templateUpdated = this.options.cartItemTemplate.replace('{' + this.options.paramSettings.productPrice + '}', this._getMoneyFormatted(p[this.options.paramSettings.productPrice]));
 
                 var quantitySelect = $('<select class="sc-cart-item-qty"></select>');
                 var value = this._getValueOrEmpty(p[this.options.paramSettings.productQuantity]);
 
-                for (var i = 1; i <= 100; i++) {
+                var selectMin = min > 0 ? min : 1;
+                var selectMax = max < 100 ? max : 100;
+                for (var i = selectMin; i <= selectMax; i++) {
                     var stepValue = step * i;
                     quantitySelect.append('<option value="' + stepValue + '">' + stepValue + '</option>');
                 }
@@ -492,6 +498,33 @@
                 }
             });
             return this._getMoneyFormatted(subtotal);
+        },
+        /*
+         * Filter product quantity
+         */
+        _filterQuantity: function (p) {
+            var quantity = p[this.options.paramSettings.productQuantity],
+                min = this._getQuantityMin(p),
+                max = this._getQuantityMax(p);
+            if (quantity < min) {
+                return min;
+            }
+            if (quantity > max) {
+                return max;
+            }
+            return quantity;
+        },
+        /*
+         * Min product quantity
+         */
+        _getQuantityMin: function (p) {
+            return typeof p[this.options.paramSettings.productQuantityMin] !== "undefined" ? p[this.options.paramSettings.productQuantityMin] : this.options.quantityOptions.min;
+        },
+        /*
+         * Max product quantity
+         */
+        _getQuantityMax: function (p) {
+            return typeof p[this.options.paramSettings.productQuantityMax] !== "undefined" ? p[this.options.paramSettings.productQuantityMax] : this.options.quantityOptions.max;
         },
         /* 
          * Cart submit functionalities
